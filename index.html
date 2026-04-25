@@ -124,6 +124,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);
 .dstat-n{font-size:26px;font-weight:700;color:var(--accent2)}
 .dstat-l{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
 .home-btn{background:var(--accent);border:none;border-radius:14px;padding:15px;width:100%;color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer}
+
+/* RESUME OVERLAY */
+#resumeOverlay{position:absolute;inset:0;background:rgba(13,13,26,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:100;padding:24px;text-align:center}
+#resumeOverlay.hidden{display:none}
+.resume-title{font-size:26px;font-weight:800;letter-spacing:-0.5px}
+.resume-sub{font-size:14px;color:var(--text2);max-width:280px;line-height:1.45}
+.resume-btn{background:var(--accent);border:none;border-radius:14px;padding:16px 32px;color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;letter-spacing:.3px;transition:transform .1s}
+.resume-btn:active{transform:scale(0.97)}
 </style>
 </head>
 <body>
@@ -169,7 +177,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);
     <div class="prog-bar" id="progBar"></div>
     <div class="ex-name" id="exName"></div>
     <div class="ex-target" id="exTarget"></div>
-    <a class="vid-btn" id="vidBtn" target="_blank" rel="noopener">
+    <a class="vid-btn" id="vidBtn" target="_blank" rel="noopener" onclick="onVideoTap()">
       <div class="vid-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
       <div><div class="vid-label">Watch guide</div><div class="vid-sub" id="vidSub"></div></div>
     </a>
@@ -240,6 +248,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);
   <!-- PULSE -->
   <div id="pulseRing"><div class="p-ring" id="pRing"></div></div>
 
+  <!-- RESUME (after returning from YouTube) -->
+  <div id="resumeOverlay" class="hidden">
+    <div class="resume-title">Welcome back</div>
+    <div class="resume-sub" id="resumeSub">Ready to restart this set?</div>
+    <button class="resume-btn" onclick="resumeWorkout()">Resume workout</button>
+  </div>
+
 </div>
 <script>
 const SESSIONS={
@@ -275,6 +290,7 @@ let repIv=null,timerIv=null,restIv=null;
 let timerSecs=0,timerTotal=0,restSecs=0,restTotal=0;
 let setDone=false,completedSets=0,startTime=0;
 let repPaused=false;
+let pausedForVideo=null;
 let synth=window.speechSynthesis;
 let voices=[];
 function loadV(){voices=synth.getVoices();}
@@ -571,6 +587,29 @@ function clearAll(){
   clearInterval(repIv);clearInterval(timerIv);clearInterval(restIv);
   try{if(synth)synth.cancel();}catch(e){}
 }
+
+function onVideoTap(){
+  if(!session)return;
+  const ex=session[exIdx];
+  pausedForVideo={exIdx,setIdx,repCount,type:ex.type};
+  clearAll();
+}
+
+function resumeWorkout(){
+  if(!pausedForVideo)return;
+  pausedForVideo=null;
+  document.getElementById('resumeOverlay').classList.add('hidden');
+  startExercise();
+}
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&pausedForVideo&&session){
+    const ex=session[pausedForVideo.exIdx];
+    document.getElementById('resumeSub').textContent=
+      `${ex.name} — Set ${pausedForVideo.setIdx+1} of ${ex.sets} will restart from the beginning`;
+    document.getElementById('resumeOverlay').classList.remove('hidden');
+  }
+});
 
 updateHome();
 </script>
