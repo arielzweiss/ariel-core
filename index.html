@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ariel Core">
+<meta name="theme-color" content="#0d0d1a">
+<title>Ariel Core</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+:root{
+  --bg:#0d0d1a;--bg2:#13132a;--bg3:#1c1c38;--bg4:#252548;
+  --accent:#5b5bff;--accent2:#8080ff;--accent3:#b3b3ff;
+  --text:#f0f0ff;--text2:#9090b0;--text3:#5a5a80;
+  --success:#3ddc84;--warn:#ffa040;--red:#ff5555;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;
+  overflow:hidden}
+#app{height:100dvh;max-width:430px;margin:0 auto;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:max(env(safe-area-inset-top),24px) 20px max(env(safe-area-inset-bottom),20px);
+  transition:opacity .25s,transform .25s;overflow-y:auto}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateX(30px)}
+.screen.out{opacity:0;pointer-events:none;transform:translateX(-30px)}
+
+/* HOME */
+.home-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px}
+.home-title{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1}
+.scard{background:var(--bg2);border-radius:20px;padding:20px;margin-bottom:12px;border:1px solid rgba(91,91,255,.15);cursor:pointer;transition:transform .12s}
+.scard:active{transform:scale(0.98)}
+.scard-day{font-size:10px;color:var(--accent3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.scard-name{font-size:22px;font-weight:700;margin-bottom:3px}
+.scard-desc{font-size:12px;color:var(--text2);margin-bottom:14px}
+.scard-tags{display:flex;gap:8px;margin-bottom:16px}
+.tag{background:var(--bg4);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2)}
+.sbtn{width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s}
+.sbtn.primary{background:var(--accent);color:#fff}
+.sbtn.secondary{background:transparent;border:1px solid var(--bg4);color:var(--text2)}
+.last-text{text-align:center;font-size:11px;color:var(--text3);letter-spacing:.5px;margin-top:12px}
+
+/* COUNTDOWN */
+#cdOverlay{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:50;transition:opacity .3s}
+#cdOverlay.hidden{opacity:0;pointer-events:none}
+.cd-exname{font-size:18px;font-weight:600;color:var(--text2);text-align:center;padding:0 24px}
+.cd-num{font-size:120px;font-weight:800;letter-spacing:-6px;line-height:1;transition:transform .15s,opacity .15s}
+.cd-num.pop{transform:scale(1.2);opacity:.5}
+.cd-go{font-size:30px;font-weight:700;color:var(--success);letter-spacing:2px}
+
+/* WORKOUT */
+.w-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.w-quit{background:var(--bg3);border:none;border-radius:10px;padding:8px 14px;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit}
+.w-navinfo{font-size:12px;color:var(--text2);letter-spacing:.5px}
+.prog-bar{display:flex;gap:3px;margin-bottom:18px}
+.prog-seg{flex:1;height:3px;background:var(--bg4);border-radius:2px;transition:background .4s}
+.prog-seg.done{background:var(--accent)}
+.prog-seg.active{background:var(--accent2)}
+.ex-name{font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px}
+.ex-target{font-size:13px;color:var(--text2);letter-spacing:.3px;margin-bottom:12px}
+.vid-btn{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid rgba(91,91,255,.2);border-radius:10px;padding:10px 14px;width:100%;cursor:pointer;margin-bottom:16px;transition:border-color .15s}
+.vid-btn:active{border-color:var(--accent)}
+.vid-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vid-icon svg{width:14px;height:14px;fill:#fff}
+.vid-label{font-size:13px;font-weight:600}
+.vid-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.sets-pips{display:flex;gap:6px;margin-bottom:20px}
+.set-pip{flex:1;height:6px;background:var(--bg4);border-radius:3px;transition:background .3s}
+.set-pip.done{background:var(--success)}
+.set-pip.active{background:var(--accent)}
+
+/* REP */
+.rep-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px;cursor:pointer}
+.rep-big{font-size:100px;font-weight:800;letter-spacing:-5px;line-height:1;transition:transform .08s;color:var(--text)}
+.rep-big.bump{transform:scale(1.12)}
+.rep-of{font-size:15px;color:var(--text3);letter-spacing:.5px;margin-top:6px}
+.rep-pace{font-size:12px;color:var(--text3);margin-top:4px}
+.rep-pause-hint{font-size:11px;color:var(--text3);margin-top:8px;letter-spacing:.5px}
+.rep-paused-badge{display:none;background:var(--warn);color:#000;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;margin-top:8px;letter-spacing:.5px}
+
+/* TIMER */
+.timer-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px}
+.t-ring{position:relative;width:170px;height:170px}
+.t-ring svg{transform:rotate(-90deg)}
+.t-ring-prog{fill:none;stroke:var(--accent);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .9s linear,stroke .4s}
+.t-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.t-sec{font-size:52px;font-weight:800;letter-spacing:-2px;line-height:1}
+.t-lbl{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+
+/* ACK */
+.ack-btn{width:100%;padding:18px;border:none;border-radius:16px;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;background:var(--success);color:#0d0d1a;margin-top:12px;transition:transform .1s,opacity .3s,max-height .3s;letter-spacing:.3px}
+.ack-btn:active{transform:scale(0.97)}
+.ack-btn.hidden{opacity:0;pointer-events:none}
+.next-prev{background:var(--bg2);border-radius:12px;padding:10px 14px;margin-top:10px}
+.np-lbl{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.np-name{font-size:13px;font-weight:600;color:var(--text2);margin-top:2px}
+
+/* PULSE RING */
+#pulseRing{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:40}
+.p-ring{position:absolute;width:80px;height:80px;border-radius:50%;border:1.5px solid var(--success);opacity:0}
+@keyframes pulseOut{0%{transform:scale(1);opacity:.4}100%{transform:scale(7);opacity:0}}
+.p-ring.fire{animation:pulseOut .9s ease-out forwards}
+
+/* REST */
+#rest{align-items:center;justify-content:center;gap:16px}
+.rest-lbl{font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
+.rest-ring{position:relative;width:200px;height:200px}
+.rest-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.rest-num{font-size:64px;font-weight:800;letter-spacing:-3px;line-height:1}
+.rest-sub{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+.rest-next-card{background:var(--bg2);border-radius:14px;padding:14px 20px;text-align:center;width:100%}
+.rn-lbl{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.rn-name{font-size:16px;font-weight:700}
+.skip-btn{background:transparent;border:1px solid var(--bg4);border-radius:12px;padding:12px 28px;color:var(--text2);font-size:14px;font-family:inherit;cursor:pointer}
+.skip-btn:active{border-color:var(--accent2)}
+
+/* DONE */
+#done{align-items:center;justify-content:center;gap:20px;text-align:center}
+.done-icon{width:80px;height:80px;background:var(--bg2);border-radius:50%;border:2px solid var(--success);display:flex;align-items:center;justify-content:center;font-size:36px}
+.done-title{font-size:34px;font-weight:800;letter-spacing:-1px;line-height:1.1}
+.done-stats{display:flex;gap:10px;width:100%}
+.dstat{flex:1;background:var(--bg2);border-radius:14px;padding:14px;text-align:center}
+.dstat-n{font-size:26px;font-weight:700;color:var(--accent2)}
+.dstat-l{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+.home-btn{background:var(--accent);border:none;border-radius:14px;padding:15px;width:100%;color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <div class="screen" id="home">
+    <div class="home-header">
+      <div>
+        <div class="home-title">Ariel Core</div>
+      </div>
+    </div>
+    <div class="scard">
+      <div class="scard-day">Session A · Core + Hip</div>
+      <div class="scard-name">Foundation</div>
+      <div class="scard-desc">Core stability, hip strength, mobility</div>
+      <div class="scard-tags"><span class="tag">8 exercises</span><span class="tag">~18 min</span></div>
+      <button class="sbtn primary" id="btnA" onclick="startSession('A')">Start Session A</button>
+    </div>
+    <div class="scard">
+      <div class="scard-day">Session B · Functional</div>
+      <div class="scard-name">Strength</div>
+      <div class="scard-desc">Eccentric loading, RDL, calf work</div>
+      <div class="scard-tags"><span class="tag">7 exercises</span><span class="tag">~15 min</span></div>
+      <button class="sbtn secondary" id="btnB" onclick="startSession('B')">Start Session B</button>
+    </div>
+    <div class="last-text" id="lastText"></div>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div id="cdOverlay" class="hidden">
+    <div class="cd-exname" id="cdExName"></div>
+    <div class="cd-num" id="cdNum">3</div>
+    <div class="cd-go hidden" id="cdGo">GO!</div>
+  </div>
+
+  <!-- WORKOUT -->
+  <div class="screen hidden" id="workout">
+    <div class="w-nav">
+      <button class="w-quit" onclick="confirmQuit()">✕ Quit</button>
+      <div class="w-navinfo" id="wNavInfo">1 / 8</div>
+    </div>
+    <div class="prog-bar" id="progBar"></div>
+    <div class="ex-name" id="exName"></div>
+    <div class="ex-target" id="exTarget"></div>
+    <button class="vid-btn" onclick="openVideo()">
+      <div class="vid-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+      <div><div class="vid-label">Watch guide</div><div class="vid-sub" id="vidSub"></div></div>
+    </button>
+    <div class="sets-pips" id="setsPips"></div>
+    <div id="repArea" class="rep-area" onclick="toggleRepPause()">
+      <div class="rep-big" id="repBig">0</div>
+      <div class="rep-of" id="repOf">of 10 reps</div>
+      <div class="rep-pace" id="repPace"></div>
+      <div class="rep-pause-hint" id="repPauseHint">tap to pause</div>
+      <div class="rep-paused-badge" id="repPausedBadge">PAUSED — tap to resume</div>
+    </div>
+    <div id="timerArea" class="timer-area" style="display:none">
+      <div class="t-ring">
+        <svg width="170" height="170" viewBox="0 0 170 170">
+          <circle fill="none" stroke="var(--bg3)" stroke-width="8" cx="85" cy="85" r="76"/>
+          <circle class="t-ring-prog" id="tRingProg" cx="85" cy="85" r="76" stroke-dasharray="478" stroke-dashoffset="0"/>
+        </svg>
+        <div class="t-inner">
+          <div class="t-sec" id="tSec">40</div>
+          <div class="t-lbl">seconds</div>
+        </div>
+      </div>
+    </div>
+    <button class="ack-btn hidden" id="ackBtn" onclick="acknowledge()">Got it ✓</button>
+    <div class="next-prev" id="nextPrev">
+      <div class="np-lbl">Up next</div>
+      <div class="np-name" id="nextName">—</div>
+    </div>
+  </div>
+
+  <!-- REST -->
+  <div class="screen hidden" id="rest">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+      <div class="rest-lbl" id="restLbl">Set rest</div>
+      <div class="rest-ring">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <circle fill="none" stroke="var(--bg3)" stroke-width="8" cx="100" cy="100" r="88" transform="rotate(-90 100 100)"/>
+          <circle fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round"
+            cx="100" cy="100" r="88" transform="rotate(-90 100 100)"
+            id="restRingEl" stroke-dasharray="553" stroke-dashoffset="0"
+            style="transition:stroke-dashoffset .9s linear"/>
+        </svg>
+        <div class="rest-inner">
+          <div class="rest-num" id="restNum">30</div>
+          <div class="rest-sub">seconds</div>
+        </div>
+      </div>
+      <div class="rest-next-card">
+        <div class="rn-lbl" id="rnLbl">Next set</div>
+        <div class="rn-name" id="rnName">—</div>
+      </div>
+      <button class="skip-btn" onclick="skipRest()">Skip rest</button>
+    </div>
+  </div>
+
+  <!-- DONE -->
+  <div class="screen hidden" id="done">
+    <div class="done-icon">✓</div>
+    <div class="done-title">Session<br>Complete</div>
+    <div class="done-stats">
+      <div class="dstat"><div class="dstat-n" id="doneEx">8</div><div class="dstat-l">exercises</div></div>
+      <div class="dstat"><div class="dstat-n" id="doneSets">24</div><div class="dstat-l">sets</div></div>
+      <div class="dstat"><div class="dstat-n" id="doneMin">18</div><div class="dstat-l">minutes</div></div>
+    </div>
+    <button class="home-btn" onclick="goHome()">Back to Home</button>
+  </div>
+
+  <!-- PULSE -->
+  <div id="pulseRing"><div class="p-ring" id="pRing"></div></div>
+
+</div>
+<script>
+const SESSIONS={
+  A:[
+    {name:'Dead Bug',target:'3 sets · 10 reps each side',sets:3,reps:10,type:'rep',pace:3,video:'7ZYoKDlNdjw',note:'Keep lower back flat'},
+    {name:'Dead Bug Reach',target:'3 sets · 10 reps each side',sets:3,reps:10,type:'rep',pace:3,video:'g5XKMzr5gUs',note:'Slow alternating reach'},
+    {name:'Plank',target:'3 sets · 40 seconds',sets:3,reps:40,type:'timer',video:'ASdvN_XEl_c',note:'Hips level, body straight'},
+    {name:'Side Plank',target:'3 sets · 30 sec each side',sets:3,reps:30,type:'timer',video:'iNbH7_edNI8',note:'30 sec each side — Runna'},
+    {name:'Bird Dog',target:'3 sets · 10 reps each side',sets:3,reps:10,type:'rep',pace:3.5,video:'ZdAHe9_HeEw',note:'Slow and controlled — NASM'},
+    {name:'Single Leg Glute Bridge',target:'3 sets · 12 reps each side',sets:3,reps:12,type:'rep',pace:2.5,video:'VUl8R0kn6v4',note:'Keep hips level — Runna'},
+    {name:'Hip Abduction',target:'3 sets · 15 reps each side',sets:3,reps:15,type:'rep',pace:2,video:'olid32fu7LY',note:'Side-lying, controlled — Runna'},
+    {name:'Hip Flexor Stretch',target:'3 sets · 30 sec each side',sets:3,reps:30,type:'timer',video:'6o-GpPIGR5w',note:'Deep lunge position — Runna'},
+  ],
+  B:[
+    {name:'Step Down Eccentric',target:'3 sets · 10 reps each side',sets:3,reps:10,type:'rep',pace:4,video:'d93bbZvxe_w',note:'3 sec down, slow — Runna'},
+    {name:'Romanian Deadlift',target:'3 sets · 10 reps',sets:3,reps:10,type:'rep',pace:3,video:'Li9jJhbSxBA',note:'Light weight, hinge at hips — Runna'},
+    {name:'Hollow Hold',target:'3 sets · 20 seconds',sets:3,reps:20,type:'timer',video:'LlDNef_Ztsc',note:'Arms overhead, back flat — GMB'},
+    {name:'Single Leg Glute Bridge',target:'3 sets · 12 reps each side',sets:3,reps:12,type:'rep',pace:2.5,video:'VUl8R0kn6v4',note:'Keep hips level — Runna'},
+    {name:'Dead Bug',target:'3 sets · 10 reps each side',sets:3,reps:10,type:'rep',pace:3,video:'7ZYoKDlNdjw',note:'Keep lower back flat — Runna'},
+    {name:'Plank',target:'3 sets · 40 seconds',sets:3,reps:40,type:'timer',video:'ASdvN_XEl_c',note:'Hips level, body straight'},
+    {name:'Calf Raise',target:'3 sets · 15 reps',sets:3,reps:15,type:'rep',pace:2,video:'td7TMmbV8wI',note:'3 sec descent — Runna'},
+  ]
+};
+
+const KUDOS=[
+  'Nice work!','Strong set!','Keep it up!','Nailed it!',
+  'Solid!','Good form!','That\'s it!','Well done!'
+];
+
+let session=null,sessionId='A';
+let exIdx=0,setIdx=0,repCount=0;
+let repIv=null,timerIv=null,restIv=null;
+let timerSecs=0,timerTotal=0,restSecs=0,restTotal=0;
+let setDone=false,completedSets=0,startTime=0;
+let repPaused=false;
+let synth=window.speechSynthesis;
+let voices=[];
+function loadV(){voices=synth.getVoices();}
+speechSynthesis.onvoiceschanged=loadV;loadV();
+
+function speak(t,rate=1,pitch=1){
+  if(!synth)return;
+  try{
+    synth.cancel();
+    const u=new SpeechSynthesisUtterance(t);
+    u.rate=rate;u.pitch=pitch;u.volume=1;
+    const v=voices.find(x=>x.lang.startsWith('en')&&x.localService)||voices.find(x=>x.lang.startsWith('en'))||voices[0];
+    if(v)u.voice=v;
+    synth.speak(u);
+  }catch(e){}
+}
+
+let actx=null;
+function getCtx(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();return actx;}
+function tone(f,d,v=0.25){
+  try{const c=getCtx(),o=c.createOscillator(),g=c.createGain();
+  o.connect(g);g.connect(c.destination);o.frequency.value=f;
+  g.gain.setValueAtTime(v,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);
+  o.start();o.stop(c.currentTime+d);}catch(e){}
+}
+function beepTick(){tone(1200,0.04,0.12);}
+function beepRep(){tone(880,0.05,0.18);}
+function beepDone(){tone(660,0.06,0.3);setTimeout(()=>tone(1100,0.15,0.35),80);}
+function beepGo(){tone(880,0.08,0.4);setTimeout(()=>tone(1100,0.12,0.4),100);}
+function beepAck(){tone(660,0.06,0.35);setTimeout(()=>tone(880,0.06,0.35),80);setTimeout(()=>tone(1100,0.15,0.4),160);}
+
+function firePulse(){
+  const r=document.getElementById('pRing');
+  r.classList.remove('fire');
+  void r.offsetWidth;
+  r.classList.add('fire');
+}
+
+function saveSession(s){
+  const h=JSON.parse(localStorage.getItem('ac_h')||'[]');
+  h.push({s,d:new Date().toISOString()});
+  if(h.length>60)h.splice(0,h.length-60);
+  localStorage.setItem('ac_h',JSON.stringify(h));
+}
+function getHistory(){return JSON.parse(localStorage.getItem('ac_h')||'[]');}
+
+function updateHome(){
+  const h=getHistory();
+  const last=h[h.length-1];
+  if(last){
+    const d=new Date(last.d);
+    const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    document.getElementById('lastText').textContent=`Last: Session ${last.s} · ${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`;
+  }
+  const next=h.length?(h[h.length-1].s==='A'?'B':'A'):'A';
+  document.getElementById('btnA').className='sbtn '+(next==='A'?'primary':'secondary');
+  document.getElementById('btnB').className='sbtn '+(next==='B'?'primary':'secondary');
+}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.toggle('hidden',s.id!==id);
+  });
+}
+
+function startSession(sid){
+  tone(440,0.1,0.3);
+  sessionId=sid;session=SESSIONS[sid];
+  exIdx=0;setIdx=0;repCount=0;completedSets=0;startTime=Date.now();
+  saveSession(sid);
+  show('workout');
+  renderExercise();
+  runCountdown();
+}
+
+function runCountdown(){
+  const ex=session[exIdx];
+  const ov=document.getElementById('cdOverlay');
+  const cdNum=document.getElementById('cdNum');
+  const cdGo=document.getElementById('cdGo');
+  document.getElementById('cdExName').textContent=ex.name;
+  cdNum.textContent='3';cdNum.classList.remove('hidden','pop');
+  cdGo.classList.add('hidden');
+  ov.classList.remove('hidden');
+  speak('3');
+  let n=3;
+  const iv=setInterval(()=>{
+    n--;
+    cdNum.classList.add('pop');
+    setTimeout(()=>cdNum.classList.remove('pop'),150);
+    if(n>0){cdNum.textContent=n;speak(String(n));}
+    else{
+      clearInterval(iv);
+      cdNum.classList.add('hidden');
+      cdGo.classList.remove('hidden');
+      speak('Go',1,1.2);beepGo();
+      setTimeout(()=>{ov.classList.add('hidden');startExercise();},700);
+    }
+  },1000);
+}
+
+function renderExercise(){
+  const ex=session[exIdx];
+  document.getElementById('exName').textContent=ex.name;
+  document.getElementById('exTarget').textContent=ex.target;
+  document.getElementById('wNavInfo').textContent=`${exIdx+1} / ${session.length}`;
+  document.getElementById('vidSub').textContent=ex.note||'';
+  document.getElementById('ackBtn').classList.add('hidden');
+  setDone=false;
+
+  const bar=document.getElementById('progBar');
+  bar.innerHTML='';
+  session.forEach((_,i)=>{
+    const s=document.createElement('div');
+    s.className='prog-seg'+(i<exIdx?' done':i===exIdx?' active':'');
+    bar.appendChild(s);
+  });
+
+  const pips=document.getElementById('setsPips');
+  pips.innerHTML='';
+  for(let i=0;i<ex.sets;i++){
+    const p=document.createElement('div');
+    p.className='set-pip'+(i<setIdx?' done':i===setIdx?' active':'');
+    pips.appendChild(p);
+  }
+  updateNext();
+}
+
+function updateNext(){
+  const ex=session[exIdx];
+  let txt;
+  if(setIdx+1<ex.sets)txt=`Set ${setIdx+2} of ${ex.sets} · ${ex.name}`;
+  else if(exIdx+1<session.length)txt=session[exIdx+1].name;
+  else txt='Session complete!';
+  document.getElementById('nextName').textContent=txt;
+}
+
+function startExercise(){
+  const ex=session[exIdx];
+  clearAll();
+  setDone=false;
+  repCount=0;
+  repPaused=false;
+  document.getElementById('ackBtn').classList.add('hidden');
+  document.getElementById('repBig').textContent='0';
+  if(ex.type==='rep'){
+    document.getElementById('repArea').style.display='flex';
+    document.getElementById('timerArea').style.display='none';
+    document.getElementById('repOf').textContent=`of ${ex.reps} reps`;
+    document.getElementById('repPace').textContent=`${ex.pace}s per rep`;
+    document.getElementById('repPauseHint').style.display='block';
+    document.getElementById('repPausedBadge').style.display='none';
+    startReps(ex);
+  } else {
+    document.getElementById('repArea').style.display='none';
+    document.getElementById('timerArea').style.display='flex';
+    startTimer(ex.reps);
+  }
+}
+
+function toggleRepPause(){
+  if(setDone||document.getElementById('repArea').style.display==='none')return;
+  repPaused=!repPaused;
+  const hint=document.getElementById('repPauseHint');
+  const badge=document.getElementById('repPausedBadge');
+  if(repPaused){
+    hint.style.display='none';
+    badge.style.display='block';
+    speak('Paused',0.9);
+    tone(440,0.08,0.2);
+  } else {
+    hint.style.display='block';
+    badge.style.display='none';
+    speak('Resume',0.9);
+    tone(880,0.08,0.3);
+  }
+}
+
+function startReps(ex){
+  repCount=0;
+  document.getElementById('repBig').textContent='0';
+  const el=document.getElementById('repBig');
+  repIv=setInterval(()=>{
+    if(repPaused)return;
+    repCount++;
+    el.textContent=repCount;
+    el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');
+    setTimeout(()=>el.classList.remove('bump'),120);
+    beepRep();
+    speak(String(repCount),1.1,1);
+    if(repCount>=ex.reps){clearInterval(repIv);onSetDone();}
+  },ex.pace*1000);
+}
+
+function startTimer(secs){
+  timerSecs=secs;timerTotal=secs;
+  document.getElementById('tSec').textContent=secs;
+  updateTRing();
+  timerIv=setInterval(()=>{
+    timerSecs--;
+    document.getElementById('tSec').textContent=timerSecs;
+    updateTRing();
+    if(timerSecs<=3&&timerSecs>0)beepTick();
+    if(timerSecs<=0){clearInterval(timerIv);onSetDone();}
+  },1000);
+}
+
+function updateTRing(){
+  const circ=478,offset=circ*(1-timerSecs/timerTotal);
+  const p=document.getElementById('tRingProg');
+  p.style.strokeDashoffset=offset;
+  const pct=timerSecs/timerTotal;
+  p.style.stroke=pct>0.5?'var(--accent)':pct>0.25?'var(--warn)':'var(--red)';
+}
+
+function onSetDone(){
+  setDone=true;repPaused=false;
+  document.getElementById('repPauseHint').style.display='none';
+  document.getElementById('repPausedBadge').style.display='none';
+  const kudos=KUDOS[Math.floor(Math.random()*KUDOS.length)];
+  beepDone();
+  speak(`${kudos} Tap Got it.`,0.95,1);
+  const btn=document.getElementById('ackBtn');
+  btn.textContent=`${kudos} Got it ✓`;
+  btn.classList.remove('hidden');
+}
+
+function acknowledge(){
+  if(!setDone)return;
+  firePulse();beepAck();
+  completedSets++;setDone=false;
+  document.getElementById('ackBtn').classList.add('hidden');
+  const ex=session[exIdx];
+  setIdx++;
+  if(setIdx>=ex.sets){setIdx=0;exIdx++;
+    if(exIdx>=session.length){showDone();return;}
+    doRest(60,true);
+  } else {
+    doRest(30,false);
+  }
+}
+
+function doRest(secs,betweenEx){
+  restSecs=secs;restTotal=secs;
+  const ex=session[exIdx];
+  document.getElementById('restLbl').textContent=betweenEx?'Exercise rest':'Set rest';
+  document.getElementById('rnLbl').textContent=betweenEx?'Next exercise':'Next set';
+  document.getElementById('rnName').textContent=betweenEx?ex.name:`Set ${setIdx+1} of ${ex.sets} · ${ex.name}`;
+  document.getElementById('restNum').textContent=secs;
+  updateRRing();
+  show('rest');
+  speak(`Rest. ${secs} seconds.`,0.9);
+  restIv=setInterval(()=>{
+    restSecs--;
+    document.getElementById('restNum').textContent=restSecs;
+    updateRRing();
+    if(restSecs<=3&&restSecs>0)beepTick();
+    if(restSecs<=0){clearInterval(restIv);endRest();}
+  },1000);
+}
+
+function updateRRing(){
+  document.getElementById('restRingEl').style.strokeDashoffset=553*(1-restSecs/restTotal);
+}
+
+function skipRest(){clearInterval(restIv);tone(440,0.06);endRest();}
+
+function endRest(){
+  show('workout');
+  renderExercise();
+  runCountdown();
+}
+
+function showDone(){
+  beepDone();setTimeout(()=>beepDone(),350);
+  speak('Session complete. Great work!',0.9,1.05);
+  const mins=Math.max(1,Math.round((Date.now()-startTime)/60000));
+  document.getElementById('doneEx').textContent=session.length;
+  document.getElementById('doneSets').textContent=completedSets;
+  document.getElementById('doneMin').textContent=mins;
+  show('done');
+}
+
+function goHome(){clearAll();show('home');updateHome();}
+
+function confirmQuit(){
+  clearAll();
+  goHome();
+}
+
+function clearAll(){
+  clearInterval(repIv);clearInterval(timerIv);clearInterval(restIv);
+  try{if(synth)synth.cancel();}catch(e){}
+}
+
+function openVideo(){
+  const ex=session&&session[exIdx];
+  if(!ex||!ex.video)return;
+  clearAll();
+  window.open(`https://www.youtube.com/watch?v=${ex.video}`,'_blank');
+}
+
+updateHome();
+</script>
+</body>
+</html>
