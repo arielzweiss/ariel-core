@@ -59,7 +59,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);
 .prog-seg.active{background:var(--accent2)}
 .ex-name{font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px}
 .ex-target{font-size:13px;color:var(--text2);letter-spacing:.3px;margin-bottom:12px}
-.vid-btn{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid rgba(91,91,255,.2);border-radius:10px;padding:10px 14px;width:100%;cursor:pointer;margin-bottom:16px;transition:border-color .15s}
+.vid-btn{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid rgba(91,91,255,.2);border-radius:10px;padding:10px 14px;width:100%;cursor:pointer;margin-bottom:16px;transition:border-color .15s;text-decoration:none;color:inherit}
 .vid-btn:active{border-color:var(--accent)}
 .vid-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .vid-icon svg{width:14px;height:14px;fill:#fff}
@@ -169,10 +169,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);
     <div class="prog-bar" id="progBar"></div>
     <div class="ex-name" id="exName"></div>
     <div class="ex-target" id="exTarget"></div>
-    <button class="vid-btn" onclick="openVideo()">
+    <a class="vid-btn" id="vidBtn" target="_blank" rel="noopener">
       <div class="vid-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
       <div><div class="vid-label">Watch guide</div><div class="vid-sub" id="vidSub"></div></div>
-    </button>
+    </a>
     <div class="sets-pips" id="setsPips"></div>
     <div id="repArea" class="rep-area" onclick="toggleRepPause()">
       <div class="rep-big" id="repBig">0</div>
@@ -383,6 +383,7 @@ function renderExercise(){
   document.getElementById('exTarget').textContent=ex.target;
   document.getElementById('wNavInfo').textContent=`${exIdx+1} / ${session.length}`;
   document.getElementById('vidSub').textContent=ex.note||'';
+  document.getElementById('vidBtn').href=ex.video?`https://www.youtube.com/watch?v=${ex.video}`:'#';
   document.getElementById('ackBtn').classList.add('hidden');
   setDone=false;
 
@@ -569,13 +570,6 @@ function confirmQuit(){
 function clearAll(){
   clearInterval(repIv);clearInterval(timerIv);clearInterval(restIv);
   try{if(synth)synth.cancel();}catch(e){}
-}
-
-function openVideo(){
-  const ex=session&&session[exIdx];
-  if(!ex||!ex.video)return;
-  clearAll();
-  window.open(`https://www.youtube.com/watch?v=${ex.video}`,'_blank');
 }
 
 updateHome();
