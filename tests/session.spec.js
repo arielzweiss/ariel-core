@@ -256,4 +256,164 @@ test.describe('Ariel Core — full session flow', () => {
     await expect(page.locator('#rnName')).toHaveText('Dead Bug Reach');
     await expect(page.locator('#restNum')).toHaveText('60');
   });
+
+  test('exercise art SVG is rendered for current exercise', async ({ page }) => {
+    await startAndSkipCountdown(page);
+    const art = page.locator('#exArt');
+    await expect(art).toBeVisible();
+    await expect(art.locator('svg')).toHaveCount(1);
+  });
+
+  test('Session B starts with Step Down Eccentric and shows 1 / 7', async ({ page }) => {
+    await page.click('#btnB');
+    await page.clock.runFor(3000);
+    await page.clock.runFor(700);
+
+    await expect(page.locator('#exName')).toHaveText('Step Down Eccentric');
+    await expect(page.locator('#wNavInfo')).toContainText('1 / 7');
+  });
+
+  test('drawer opens via nav-info tap and renders all 8 exercise rows', async ({ page }) => {
+    await startAndSkipCountdown(page);
+
+    await expect(page.locator('#navDrawer')).not.toHaveClass(/open/);
+    await page.click('#wNavInfo');
+    await expect(page.locator('#navDrawer')).toHaveClass(/open/);
+    await expect(page.locator('#wNavInfo')).toContainText('▴');
+    await expect(page.locator('#navSessionLbl')).toHaveText('Session A');
+    await expect(page.locator('.nav-row')).toHaveCount(8);
+    const firstRow = page.locator('.nav-row').nth(0);
+    await expect(firstRow).toHaveClass(/active/);
+    await expect(firstRow.locator('.nav-name')).toHaveText('Dead Bug');
+    await expect(firstRow.locator('.nav-active-lbl')).toHaveText('active');
+  });
+
+  test('drawer closes via second nav-info tap', async ({ page }) => {
+    await startAndSkipCountdown(page);
+
+    await page.click('#wNavInfo');
+    await expect(page.locator('#navDrawer')).toHaveClass(/open/);
+
+    await page.click('#wNavInfo');
+    await expect(page.locator('#navDrawer')).not.toHaveClass(/open/);
+    await expect(page.locator('#wNavInfo')).toContainText('▾');
+  });
+
+  test('drawer closes via backdrop tap and exercise is preserved', async ({ page }) => {
+    await startAndSkipCountdown(page);
+
+    await page.click('#wNavInfo');
+    await expect(page.locator('#navDrawer')).toHaveClass(/open/);
+
+    // Click the backdrop in the area above the panel (panel starts at top:80px)
+    await page.locator('.nav-backdrop').click({ position: { x: 50, y: 30 } });
+
+    await expect(page.locator('#navDrawer')).not.toHaveClass(/open/);
+    await expect(page.locator('#exName')).toHaveText('Dead Bug');
+  });
+
+  test('drawer pauses rep counter on open and resumes on close-without-selection', async ({ page }) => {
+    await startAndSkipCountdown(page);
+
+    await page.clock.runFor(3000);
+    await expect(page.locator('#repBig')).toHaveText('1');
+
+    await page.click('#wNavInfo');
+
+    // 9s of fake time elapses while drawer is open — count must not advance
+    await page.clock.runFor(9000);
+    await expect(page.locator('#repBig')).toHaveText('1');
+
+    await page.click('#wNavInfo'); // toggle close
+
+    // Reps resume from where they were
+    await page.clock.runFor(3000);
+    await expect(page.locator('#repBig')).toHaveText('2');
+  });
+
+  test('drawer row tap jumps to selected exercise and starts countdown', async ({ page }) => {
+    await startAndSkipCountdown(page);
+
+    // Run reps a bit to prove jump resets state
+    await page.clock.runFor(6000);
+    await expect(page.locator('#repBig')).toHaveText('2');
+
+    await page.click('#wNavInfo');
+    // Tap row 5 (index 4) — Bird Dog
+    await page.locator('.nav-row').nth(4).click();
+
+    await expect(page.locator('#navDrawer')).not.toHaveClass(/open/);
+    await expect(page.locator('#cdOverlay')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#cdExName')).toHaveText('Bird Dog');
+    await expect(page.locator('#cdNum')).toHaveText('3');
+
+    await page.clock.runFor(3000);
+    await page.clock.runFor(700);
+
+    await expect(page.locator('#exName')).toHaveText('Bird Dog');
+    await expect(page.locator('#wNavInfo')).toContainText('5 / 8');
+    await expect(page.locator('#repBig')).toHaveText('0');
+  });
+
+  test('timer exercise (Plank) counts down from 40 and shows ack at zero', async ({ page }) => {
+    await startAndSkipCountdown(page);
+
+    // Jump to Plank (index 2) via the drawer
+    await page.click('#wNavInfo');
+    await page.locator('.nav-row').nth(2).click();
+    await page.clock.runFor(3000);
+    await page.clock.runFor(700);
+
+    await expect(page.locator('#exName')).toHaveText('Plank');
+    await expect(page.locator('#timerArea')).toBeVisible();
+    await expect(page.locator('#repArea')).toBeHidden();
+    await expect(page.locator('#tSec')).toHaveText('40');
+
+    await page.clock.runFor(1000);
+    await expect(page.locator('#tSec')).toHaveText('39');
+
+    await page.clock.runFor(39_000);
+    await expect(page.locator('#tSec')).toHaveText('0');
+    await expect(page.locator('#ackBtn')).toBeVisible();
+  });
+
+  test('YouTube watch-guide saves state and visibility return shows Resume overlay', async ({ page }) => {
+    await startAndSkipCountdown(page);
+
+    // Get to rep 2
+    await page.clock.runFor(6000);
+    await expect(page.locator('#repBig')).toHaveText('2');
+
+    // Strip href/target so click fires onclick without navigating
+    await page.evaluate(() => {
+      const a = document.getElementById('vidBtn');
+      a.removeAttribute('href');
+      a.removeAttribute('target');
+    });
+
+    await page.click('#vidBtn');
+
+    // onVideoTap → clearAll → reps frozen even with time passing
+    await page.clock.runFor(9000);
+    await expect(page.locator('#repBig')).toHaveText('2');
+
+    // Simulate hidden → visible visibility transition
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+      Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    await expect(page.locator('#resumeOverlay')).not.toHaveClass(/hidden/);
+
+    // Tap Resume → set restarts at rep 0
+    await page.click('.resume-btn');
+    await expect(page.locator('#resumeOverlay')).toHaveClass(/hidden/);
+    await expect(page.locator('#repBig')).toHaveText('0');
+
+    // Reps tick again from zero
+    await page.clock.runFor(3000);
+    await expect(page.locator('#repBig')).toHaveText('1');
+  });
 });
