@@ -58,6 +58,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);
 .prog-seg.done{background:var(--accent)}
 .prog-seg.active{background:var(--accent2)}
 .ex-name{font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px}
+.ex-art{display:flex;justify-content:center;margin:4px 0 8px;height:80px}
+.ex-art svg{width:120px;height:80px;display:block}
 .ex-target{font-size:13px;color:var(--text2);letter-spacing:.3px;margin-bottom:12px}
 .vid-btn{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid rgba(91,91,255,.2);border-radius:10px;padding:10px 14px;width:100%;cursor:pointer;margin-bottom:16px;transition:border-color .15s;text-decoration:none;color:inherit}
 .vid-btn:active{border-color:var(--accent)}
@@ -176,6 +178,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);
     </div>
     <div class="prog-bar" id="progBar"></div>
     <div class="ex-name" id="exName"></div>
+    <div class="ex-art" id="exArt"></div>
     <div class="ex-target" id="exTarget"></div>
     <a class="vid-btn" id="vidBtn" target="_blank" rel="noopener" onclick="onVideoTap()">
       <div class="vid-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
@@ -259,11 +262,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);
 <script>
 const SESSIONS={
   A:[
-    {name:'Dead Bug',target:'3 sets · 10 reps each side',sets:3,reps:10,type:'rep',pace:3,video:'7ZYoKDlNdjw',note:'Keep lower back flat'},
-    {name:'Dead Bug Reach',target:'3 sets · 10 reps each side',sets:3,reps:10,type:'rep',pace:3,video:'g5XKMzr5gUs',note:'Slow alternating reach'},
-    {name:'Plank',target:'3 sets · 40 seconds',sets:3,reps:40,type:'timer',video:'ASdvN_XEl_c',note:'Hips level, body straight'},
+    {name:'Dead Bug',target:'3 sets · 10 reps alternating sides',sets:3,reps:10,type:'rep',pace:3,video:'7ZYoKDlNdjw',note:'Keep lower back flat'},
+    {name:'Dead Bug Reach',target:'3 sets · 10 reps alternating sides',sets:3,reps:10,type:'rep',pace:3,video:'g5XKMzr5gUs',note:'Slow alternating reach'},
+    {name:'Plank',target:'3 sets · 40 sec hold',sets:3,reps:40,type:'timer',video:'ASdvN_XEl_c',note:'Hips level, body straight'},
     {name:'Side Plank',target:'3 sets · 30 sec each side',sets:3,reps:30,type:'timer',video:'iNbH7_edNI8',note:'30 sec each side — Runna'},
-    {name:'Bird Dog',target:'3 sets · 10 reps each side',sets:3,reps:10,type:'rep',pace:3.5,video:'ZdAHe9_HeEw',note:'Slow and controlled — NASM'},
+    {name:'Bird Dog',target:'3 sets · 10 reps alternating sides',sets:3,reps:10,type:'rep',pace:3.5,video:'ZdAHe9_HeEw',note:'Slow and controlled — NASM'},
     {name:'Single Leg Glute Bridge',target:'3 sets · 12 reps each side',sets:3,reps:12,type:'rep',pace:2.5,video:'VUl8R0kn6v4',note:'Keep hips level — Runna'},
     {name:'Hip Abduction',target:'3 sets · 15 reps each side',sets:3,reps:15,type:'rep',pace:2,video:'olid32fu7LY',note:'Side-lying, controlled — Runna'},
     {name:'Hip Flexor Stretch',target:'3 sets · 30 sec each side',sets:3,reps:30,type:'timer',video:'6o-GpPIGR5w',note:'Deep lunge position — Runna'},
@@ -271,10 +274,10 @@ const SESSIONS={
   B:[
     {name:'Step Down Eccentric',target:'3 sets · 10 reps each side',sets:3,reps:10,type:'rep',pace:4,video:'d93bbZvxe_w',note:'3 sec down, slow — Runna'},
     {name:'Romanian Deadlift',target:'3 sets · 10 reps',sets:3,reps:10,type:'rep',pace:3,video:'Li9jJhbSxBA',note:'Light weight, hinge at hips — Runna'},
-    {name:'Hollow Hold',target:'3 sets · 20 seconds',sets:3,reps:20,type:'timer',video:'LlDNef_Ztsc',note:'Arms overhead, back flat — GMB'},
+    {name:'Hollow Hold',target:'3 sets · 20 sec hold',sets:3,reps:20,type:'timer',video:'LlDNef_Ztsc',note:'Arms overhead, back flat — GMB'},
     {name:'Single Leg Glute Bridge',target:'3 sets · 12 reps each side',sets:3,reps:12,type:'rep',pace:2.5,video:'VUl8R0kn6v4',note:'Keep hips level — Runna'},
-    {name:'Dead Bug',target:'3 sets · 10 reps each side',sets:3,reps:10,type:'rep',pace:3,video:'7ZYoKDlNdjw',note:'Keep lower back flat — Runna'},
-    {name:'Plank',target:'3 sets · 40 seconds',sets:3,reps:40,type:'timer',video:'ASdvN_XEl_c',note:'Hips level, body straight'},
+    {name:'Dead Bug',target:'3 sets · 10 reps alternating sides',sets:3,reps:10,type:'rep',pace:3,video:'7ZYoKDlNdjw',note:'Keep lower back flat — Runna'},
+    {name:'Plank',target:'3 sets · 40 sec hold',sets:3,reps:40,type:'timer',video:'ASdvN_XEl_c',note:'Hips level, body straight'},
     {name:'Calf Raise',target:'3 sets · 15 reps',sets:3,reps:15,type:'rep',pace:2,video:'td7TMmbV8wI',note:'3 sec descent — Runna'},
   ]
 };
@@ -283,6 +286,98 @@ const KUDOS=[
   'Nice work!','Strong set!','Keep it up!','Nailed it!',
   'Solid!','Good form!','That\'s it!','Well done!'
 ];
+
+const SVG_OPEN='<svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">';
+const FLOOR='<line x1="5" y1="72" x2="115" y2="72" opacity="0.3"/>';
+const EX_ART={
+  'Dead Bug':SVG_OPEN+FLOOR+
+    '<circle cx="30" cy="66" r="4" fill="#fff" stroke="none"/>'+
+    '<line x1="34" y1="66" x2="75" y2="66"/>'+
+    '<line x1="34" y1="66" x2="10" y2="66"/>'+
+    '<line x1="34" y1="66" x2="34" y2="32"/>'+
+    '<line x1="75" y1="66" x2="108" y2="66"/>'+
+    '<line x1="75" y1="66" x2="75" y2="32"/>'+
+    '</svg>',
+  'Dead Bug Reach':SVG_OPEN+FLOOR+
+    '<circle cx="30" cy="66" r="4" fill="#fff" stroke="none"/>'+
+    '<line x1="34" y1="66" x2="75" y2="66"/>'+
+    '<line x1="34" y1="66" x2="6" y2="60"/>'+
+    '<line x1="34" y1="66" x2="34" y2="32"/>'+
+    '<line x1="75" y1="66" x2="114" y2="60"/>'+
+    '<line x1="75" y1="66" x2="75" y2="32"/>'+
+    '</svg>',
+  'Plank':SVG_OPEN+FLOOR+
+    '<line x1="15" y1="70" x2="42" y2="70"/>'+
+    '<line x1="30" y1="70" x2="30" y2="55"/>'+
+    '<line x1="30" y1="55" x2="100" y2="62"/>'+
+    '<circle cx="24" cy="53" r="4" fill="#fff" stroke="none"/>'+
+    '<line x1="100" y1="62" x2="106" y2="70"/>'+
+    '</svg>',
+  'Side Plank':SVG_OPEN+FLOOR+
+    '<line x1="12" y1="70" x2="44" y2="70"/>'+
+    '<line x1="28" y1="70" x2="28" y2="38"/>'+
+    '<circle cx="24" cy="32" r="4" fill="#fff" stroke="none"/>'+
+    '<line x1="28" y1="38" x2="105" y2="70"/>'+
+    '<line x1="28" y1="38" x2="28" y2="14"/>'+
+    '</svg>',
+  'Bird Dog':SVG_OPEN+FLOOR+
+    '<line x1="35" y1="45" x2="78" y2="46"/>'+
+    '<circle cx="30" cy="45" r="4" fill="#fff" stroke="none"/>'+
+    '<line x1="35" y1="45" x2="35" y2="70"/>'+
+    '<line x1="78" y1="46" x2="78" y2="70"/>'+
+    '<line x1="35" y1="45" x2="6" y2="34"/>'+
+    '<line x1="78" y1="46" x2="112" y2="32"/>'+
+    '</svg>',
+  'Single Leg Glute Bridge':SVG_OPEN+FLOOR+
+    '<circle cx="14" cy="68" r="4" fill="#fff" stroke="none"/>'+
+    '<line x1="18" y1="68" x2="60" y2="38"/>'+
+    '<line x1="60" y1="38" x2="72" y2="52"/>'+
+    '<line x1="72" y1="52" x2="72" y2="70"/>'+
+    '<line x1="60" y1="38" x2="106" y2="28"/>'+
+    '</svg>',
+  'Hip Abduction':SVG_OPEN+FLOOR+
+    '<circle cx="14" cy="64" r="4" fill="#fff" stroke="none"/>'+
+    '<line x1="18" y1="64" x2="76" y2="64"/>'+
+    '<line x1="76" y1="64" x2="108" y2="64"/>'+
+    '<line x1="76" y1="64" x2="108" y2="38"/>'+
+    '</svg>',
+  'Hip Flexor Stretch':SVG_OPEN+FLOOR+
+    '<line x1="35" y1="70" x2="60" y2="40"/>'+
+    '<line x1="85" y1="70" x2="75" y2="52"/>'+
+    '<line x1="75" y1="52" x2="60" y2="40"/>'+
+    '<line x1="60" y1="40" x2="60" y2="18"/>'+
+    '<circle cx="60" cy="14" r="4" fill="#fff" stroke="none"/>'+
+    '</svg>',
+  'Step Down Eccentric':SVG_OPEN+FLOOR+
+    '<line x1="15" y1="55" x2="55" y2="55"/>'+
+    '<line x1="55" y1="55" x2="55" y2="72"/>'+
+    '<line x1="35" y1="55" x2="50" y2="30"/>'+
+    '<line x1="50" y1="30" x2="68" y2="48"/>'+
+    '<line x1="68" y1="48" x2="68" y2="66"/>'+
+    '<line x1="50" y1="30" x2="50" y2="12"/>'+
+    '<circle cx="50" cy="8" r="4" fill="#fff" stroke="none"/>'+
+    '</svg>',
+  'Romanian Deadlift':SVG_OPEN+FLOOR+
+    '<line x1="48" y1="70" x2="48" y2="38"/>'+
+    '<line x1="48" y1="38" x2="92" y2="50"/>'+
+    '<circle cx="96" cy="51" r="4" fill="#fff" stroke="none"/>'+
+    '<line x1="86" y1="48" x2="86" y2="64"/>'+
+    '<line x1="74" y1="64" x2="98" y2="64"/>'+
+    '</svg>',
+  'Hollow Hold':SVG_OPEN+FLOOR+
+    '<path d="M 6 48 Q 60 76 114 48"/>'+
+    '<circle cx="22" cy="54" r="4" fill="#fff" stroke="none"/>'+
+    '</svg>',
+  'Calf Raise':SVG_OPEN+FLOOR+
+    '<line x1="42" y1="66" x2="62" y2="72"/>'+
+    '<line x1="62" y1="72" x2="56" y2="60"/>'+
+    '<line x1="56" y1="60" x2="56" y2="30"/>'+
+    '<line x1="56" y1="30" x2="56" y2="12"/>'+
+    '<circle cx="56" cy="8" r="4" fill="#fff" stroke="none"/>'+
+    '<line x1="56" y1="22" x2="46" y2="38"/>'+
+    '<line x1="56" y1="22" x2="66" y2="38"/>'+
+    '</svg>'
+};
 
 let session=null,sessionId='A';
 let exIdx=0,setIdx=0,repCount=0;
@@ -396,6 +491,7 @@ function runCountdown(){
 function renderExercise(){
   const ex=session[exIdx];
   document.getElementById('exName').textContent=ex.name;
+  document.getElementById('exArt').innerHTML=EX_ART[ex.name]||'';
   document.getElementById('exTarget').textContent=ex.target;
   document.getElementById('wNavInfo').textContent=`${exIdx+1} / ${session.length}`;
   document.getElementById('vidSub').textContent=ex.note||'';
