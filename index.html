@@ -54,9 +54,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);
 .w-quit{background:var(--bg3);border:none;border-radius:10px;padding:8px 14px;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit}
 .w-navinfo{font-size:12px;color:var(--text2);letter-spacing:.5px}
 .prog-bar{display:flex;gap:3px;margin-bottom:18px}
-.prog-seg{flex:1;height:3px;background:var(--bg4);border-radius:2px;transition:background .4s}
-.prog-seg.done{background:var(--accent)}
-.prog-seg.active{background:var(--accent2)}
+.prog-seg{flex:1;height:3px;padding:9px 0;box-sizing:content-box;background-color:var(--bg4);background-clip:content-box;border-radius:2px;cursor:pointer;transition:background-color .4s,transform .12s}
+.prog-seg.done{background-color:var(--accent)}
+.prog-seg.active{background-color:var(--accent2)}
+.prog-seg.tapped{background-color:var(--accent3);transform:scaleY(2.2)}
 .ex-name{font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px}
 .ex-art{display:flex;justify-content:center;margin:4px 0 8px;height:80px}
 .ex-art svg{width:120px;height:80px;display:block}
@@ -504,6 +505,7 @@ function renderExercise(){
   session.forEach((_,i)=>{
     const s=document.createElement('div');
     s.className='prog-seg'+(i<exIdx?' done':i===exIdx?' active':'');
+    s.onclick=()=>jumpToExercise(i);
     bar.appendChild(s);
   });
 
@@ -682,6 +684,22 @@ function confirmQuit(){
 function clearAll(){
   clearInterval(repIv);clearInterval(timerIv);clearInterval(restIv);
   try{if(synth)synth.cancel();}catch(e){}
+}
+
+function jumpToExercise(i){
+  if(!session||i<0||i>=session.length)return;
+  const segs=document.querySelectorAll('#progBar .prog-seg');
+  if(segs[i])segs[i].classList.add('tapped');
+  setTimeout(()=>{
+    clearAll();
+    exIdx=i;
+    setIdx=0;
+    repCount=0;
+    setDone=false;
+    repPaused=false;
+    renderExercise();
+    runCountdown();
+  },150);
 }
 
 function onVideoTap(){
