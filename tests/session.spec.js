@@ -249,11 +249,11 @@ test.describe('Ariel Core — full session flow', () => {
     }
     expect(acks).toBe(3);
 
-    // Now we should be in a 60s rest screen labelled "Exercise rest" pointing to Dead Bug Reach
+    // Now we should be in a 60s rest screen labelled "Exercise rest" pointing to Mountain Climber Slow
     await expect(page.locator('#rest')).not.toHaveClass(/hidden/);
     await expect(page.locator('#restLbl')).toHaveText('Exercise rest');
     await expect(page.locator('#rnLbl')).toHaveText('Next exercise');
-    await expect(page.locator('#rnName')).toHaveText('Dead Bug Reach');
+    await expect(page.locator('#rnName')).toHaveText('Mountain Climber Slow');
     await expect(page.locator('#restNum')).toHaveText('60');
   });
 
