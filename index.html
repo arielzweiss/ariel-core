@@ -52,12 +52,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);
 /* WORKOUT */
 .w-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .w-quit{background:var(--bg3);border:none;border-radius:10px;padding:8px 14px;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit}
-.w-navinfo{font-size:12px;color:var(--text2);letter-spacing:.5px}
+.w-navinfo{background:var(--bg3);border:1px solid var(--bg4);border-radius:10px;padding:6px 12px;font-size:12px;color:var(--text2);letter-spacing:.5px;font-family:inherit;cursor:pointer;transition:border-color .2s}
+.w-navinfo.open{border-color:var(--accent);color:var(--text)}
+.w-navinfo:active{border-color:var(--accent2)}
 .prog-bar{display:flex;gap:3px;margin-bottom:18px}
-.prog-seg{flex:1;height:3px;padding:9px 0;box-sizing:content-box;background-color:var(--bg4);background-clip:content-box;border-radius:2px;cursor:pointer;transition:background-color .4s,transform .12s}
-.prog-seg.done{background-color:var(--accent)}
-.prog-seg.active{background-color:var(--accent2)}
-.prog-seg.tapped{background-color:var(--accent3);transform:scaleY(2.2)}
+.prog-seg{flex:1;height:3px;background:var(--bg4);border-radius:2px;transition:background .4s}
+.prog-seg.done{background:var(--accent)}
+.prog-seg.active{background:var(--accent2)}
 .ex-name{font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px}
 .ex-art{display:flex;justify-content:center;margin:4px 0 8px;height:80px}
 .ex-art svg{width:120px;height:80px;display:block}
@@ -135,6 +136,28 @@ html,body{height:100%;background:var(--bg);color:var(--text);
 .resume-sub{font-size:14px;color:var(--text2);max-width:280px;line-height:1.45}
 .resume-btn{background:var(--accent);border:none;border-radius:14px;padding:16px 32px;color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;letter-spacing:.3px;transition:transform .1s}
 .resume-btn:active{transform:scale(0.97)}
+
+/* NAV DRAWER */
+#navDrawer{position:absolute;inset:0;z-index:60;pointer-events:none}
+#navDrawer.open{pointer-events:auto}
+.nav-backdrop{position:absolute;inset:0;background:rgba(13,13,26,.55);opacity:0;transition:opacity .25s ease}
+#navDrawer.open .nav-backdrop{opacity:1}
+.nav-panel{position:absolute;left:0;right:0;top:80px;bottom:0;background:var(--bg2);border-top:1px solid var(--bg4);border-radius:16px 16px 0 0;padding:16px 14px max(env(safe-area-inset-bottom),20px);overflow-y:auto;transform:translateY(100%);transition:transform .25s ease;box-shadow:0 -8px 24px rgba(0,0,0,.4)}
+#navDrawer.open .nav-panel{transform:translateY(0)}
+.nav-session-lbl{font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;text-align:center}
+.nav-list{display:flex;flex-direction:column;gap:2px}
+.nav-row{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 10px;border-radius:10px;cursor:pointer;background:transparent;transition:background .15s;font-family:inherit;border:none;text-align:left;width:100%}
+.nav-row:active{background:var(--bg3)}
+.nav-row.active{background:var(--bg3)}
+.nav-circle{width:28px;height:28px;border-radius:50%;background:var(--bg4);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.nav-row.done .nav-circle{background:var(--success);color:#0d0d1a}
+.nav-row.active .nav-circle{background:var(--accent);color:#fff}
+.nav-mid{flex:1;min-width:0}
+.nav-name{font-size:14px;font-weight:600;color:var(--text2)}
+.nav-row.active .nav-name{color:var(--text)}
+.nav-row.done .nav-name{color:var(--text3)}
+.nav-target{font-size:11px;color:var(--text3);margin-top:2px}
+.nav-active-lbl{font-size:10px;color:var(--accent2);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -175,7 +198,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);
   <div class="screen hidden" id="workout">
     <div class="w-nav">
       <button class="w-quit" onclick="confirmQuit()">✕ Quit</button>
-      <div class="w-navinfo" id="wNavInfo">1 / 8</div>
+      <button class="w-navinfo" id="wNavInfo" onclick="toggleDrawer()">1 / 8 ▾</button>
     </div>
     <div class="prog-bar" id="progBar"></div>
     <div class="ex-name" id="exName"></div>
@@ -257,6 +280,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);
     <div class="resume-title">Welcome back</div>
     <div class="resume-sub" id="resumeSub">Ready to restart this set?</div>
     <button class="resume-btn" onclick="resumeWorkout()">Resume workout</button>
+  </div>
+
+  <!-- NAV DRAWER -->
+  <div id="navDrawer">
+    <div class="nav-backdrop" onclick="closeDrawer(false)"></div>
+    <div class="nav-panel">
+      <div class="nav-session-lbl" id="navSessionLbl">Session A</div>
+      <div class="nav-list" id="navList"></div>
+    </div>
   </div>
 
 </div>
@@ -494,7 +526,7 @@ function renderExercise(){
   document.getElementById('exName').textContent=ex.name;
   document.getElementById('exArt').innerHTML=EX_ART[ex.name]||'';
   document.getElementById('exTarget').textContent=ex.target;
-  document.getElementById('wNavInfo').textContent=`${exIdx+1} / ${session.length}`;
+  updateNavInfo();
   document.getElementById('vidSub').textContent=ex.note||'';
   document.getElementById('vidBtn').href=ex.video?`https://www.youtube.com/watch?v=${ex.video}`:'#';
   document.getElementById('ackBtn').classList.add('hidden');
@@ -505,7 +537,6 @@ function renderExercise(){
   session.forEach((_,i)=>{
     const s=document.createElement('div');
     s.className='prog-seg'+(i<exIdx?' done':i===exIdx?' active':'');
-    s.onclick=()=>jumpToExercise(i);
     bar.appendChild(s);
   });
 
@@ -585,17 +616,19 @@ function startReps(ex){
   },ex.pace*1000);
 }
 
+function timerTick(){
+  timerSecs--;
+  document.getElementById('tSec').textContent=timerSecs;
+  updateTRing();
+  if(timerSecs<=3&&timerSecs>0)beepTick();
+  if(timerSecs<=0){clearInterval(timerIv);timerIv=null;onSetDone();}
+}
+
 function startTimer(secs){
   timerSecs=secs;timerTotal=secs;
   document.getElementById('tSec').textContent=secs;
   updateTRing();
-  timerIv=setInterval(()=>{
-    timerSecs--;
-    document.getElementById('tSec').textContent=timerSecs;
-    updateTRing();
-    if(timerSecs<=3&&timerSecs>0)beepTick();
-    if(timerSecs<=0){clearInterval(timerIv);onSetDone();}
-  },1000);
+  timerIv=setInterval(timerTick,1000);
 }
 
 function updateTRing(){
@@ -686,20 +719,84 @@ function clearAll(){
   try{if(synth)synth.cancel();}catch(e){}
 }
 
-function jumpToExercise(i){
+let drawerWasRepPaused=false,drawerWasTimerRunning=false;
+
+function updateNavInfo(){
+  if(!session)return;
+  const open=document.getElementById('navDrawer').classList.contains('open');
+  const btn=document.getElementById('wNavInfo');
+  btn.textContent=`${exIdx+1} / ${session.length} ${open?'▴':'▾'}`;
+  btn.classList.toggle('open',open);
+}
+
+function renderNavList(){
+  document.getElementById('navSessionLbl').textContent=`Session ${sessionId}`;
+  const list=document.getElementById('navList');
+  list.innerHTML='';
+  session.forEach((ex,i)=>{
+    const state=i<exIdx?'done':i===exIdx?'active':'upcoming';
+    const row=document.createElement('button');
+    row.className='nav-row '+state;
+    row.onclick=()=>selectExercise(i);
+    const circle=document.createElement('div');
+    circle.className='nav-circle';
+    circle.textContent=state==='done'?'✓':String(i+1);
+    const mid=document.createElement('div');
+    mid.className='nav-mid';
+    const name=document.createElement('div');
+    name.className='nav-name';name.textContent=ex.name;
+    const target=document.createElement('div');
+    target.className='nav-target';target.textContent=ex.target;
+    mid.appendChild(name);mid.appendChild(target);
+    row.appendChild(circle);row.appendChild(mid);
+    if(state==='active'){
+      const lbl=document.createElement('div');
+      lbl.className='nav-active-lbl';lbl.textContent='active';
+      row.appendChild(lbl);
+    }
+    list.appendChild(row);
+  });
+}
+
+function toggleDrawer(){
+  const d=document.getElementById('navDrawer');
+  if(d.classList.contains('open'))closeDrawer(false);
+  else openDrawer();
+}
+
+function openDrawer(){
+  if(!session)return;
+  drawerWasRepPaused=repPaused;
+  drawerWasTimerRunning=!!timerIv;
+  repPaused=true;
+  if(timerIv){clearInterval(timerIv);timerIv=null;}
+  try{if(synth)synth.cancel();}catch(e){}
+  renderNavList();
+  document.getElementById('navDrawer').classList.add('open');
+  updateNavInfo();
+}
+
+function closeDrawer(selected){
+  document.getElementById('navDrawer').classList.remove('open');
+  updateNavInfo();
+  if(selected)return;
+  repPaused=drawerWasRepPaused;
+  if(drawerWasTimerRunning&&timerSecs>0){
+    timerIv=setInterval(timerTick,1000);
+  }
+}
+
+function selectExercise(i){
   if(!session||i<0||i>=session.length)return;
-  const segs=document.querySelectorAll('#progBar .prog-seg');
-  if(segs[i])segs[i].classList.add('tapped');
-  setTimeout(()=>{
-    clearAll();
-    exIdx=i;
-    setIdx=0;
-    repCount=0;
-    setDone=false;
-    repPaused=false;
-    renderExercise();
-    runCountdown();
-  },150);
+  closeDrawer(true);
+  clearAll();
+  exIdx=i;
+  setIdx=0;
+  repCount=0;
+  setDone=false;
+  repPaused=false;
+  renderExercise();
+  runCountdown();
 }
 
 function onVideoTap(){

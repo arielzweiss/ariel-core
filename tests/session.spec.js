@@ -69,7 +69,7 @@ test.describe('Ariel Core — full session flow', () => {
 
     await expect(page.locator('#exName')).toHaveText('Dead Bug');
     await expect(page.locator('#exTarget')).toHaveText('3 sets · 10 reps alternating sides');
-    await expect(page.locator('#wNavInfo')).toHaveText('1 / 8');
+    await expect(page.locator('#wNavInfo')).toContainText('1 / 8');
     await expect(page.locator('#repArea')).toBeVisible();
     await expect(page.locator('#timerArea')).toBeHidden();
     await expect(page.locator('#repBig')).toHaveText('0');
